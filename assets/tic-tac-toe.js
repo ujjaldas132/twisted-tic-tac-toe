@@ -9,10 +9,22 @@ var gameEnd=false;
 var array;
 var rowMap={};
 var colMap={};
+var player2IsSysUser = true;
+var player3IsSysUser = true;
 
 var cellSize=285;
 var winningMoves=N_SIZE;
 
+//setting up the players
+const urlParams = new URLSearchParams(window.location.search);
+const player2 = urlParams.get('player2');
+if(player2=="false") {
+	player2IsSysUser = false;
+}
+const player3 = urlParams.get('player3');
+if(player3=="false") {
+	player3IsSysUser = false;
+}
 
 
 if(window.screen.width>780){
@@ -197,30 +209,8 @@ function set(){
 	score[turn]+=this.identifier;
 
 
-var winner = isThereAWinner(turn, row, col);
-console.log("Winner " + winner);
-if(winner != '-1') {
-	console.log('Player '+ winner + " Win the game");
-	document.getElementById('turn').textContent='Player '+ winner + " win the game";
-	gameEnd=true;
-		// document.getElementById('turn').textContent='Player '+turn+' is the WINNER';
-		boxes.forEach(function (square){// learn
-		square.removeEventListener('click',set);//clicking event is removed
-	})
-} else {
+validationAfterEveryMove(turn, row, col);
 
-
-// Next turn
-if(turn=='1'){
-		turn='2';
-	}else if(turn=='2'){
-		turn='3';
-	} else if(turn=='3'){
-		turn='1';
-	}
-
-	document.getElementById('turn').textContent='Your turn Player '+ turn;
-}
 
 }
 
@@ -245,20 +235,20 @@ markersMap = {
 };
 
 if(checkWinner(markersMap[turn][0],markersMap[turn][1],row, col)){
-	console.log("Marker is the winner");
+	// console.log("Marker is the winner");
 	return turn;
 }
 
 if(turn != '1' && checkWinner('1','2',row, col)){
-	console.log("Player 1 is the winner");
+	// console.log("Player 1 is the winner");
 	return '1';
 }
 if(turn != '2' && checkWinner('3','2',row, col)){
-	console.log("Player 2 is the winner");
+	// console.log("Player 2 is the winner");
 	return '2';
 }
 if(turn != '3' && checkWinner('1','3',row, col)){
-	console.log("Player 3 is the winner");
+	// console.log("Player 3 is the winner");
 	return '3';
 }
 
@@ -326,8 +316,8 @@ if (dRow > 4 || dCol < 0 ){
 	dRow = row;
 	dCol = col;
 }
-console.log(row + " dRow "+ dRow);
-console.log(col + " dCol"+ dCol);
+// console.log(row + " dRow "+ dRow);
+// console.log(col + " dCol"+ dCol);
 
 for(var startingPoint =0; startingPoint<2;startingPoint++){
 	var count = 0;
@@ -347,6 +337,126 @@ for(var i =startingPoint; dRow-i>=0 && dCol+i<5;i++){
 
 return false;
 
+}
+
+
+/**
+**/
+
+function computerTurn(marker) {
+	if(gameEnd || moves>=N_SIZE*N_SIZE)
+		return;
+	var check=true;
+	var row=-1;
+	var col=-1;
+	var markerValue = {'1':1,'2':2,'3':3};
+
+	// Check if from one move computer is winning then make the move
+	for(var i=0;i<N_SIZE;i++){
+		for(var j=0;j<N_SIZE;j++){
+			if (array[i][j] ==-1) {
+				array[i][j] = markerValue[marker];
+				var winner = isThereAWinner(marker, i, j);
+				if (winner == marker) {
+					row = i;
+					col = j;
+					array[i][j]=-1;
+					break;
+				}
+
+
+				//put the original value
+				array[i][j]=-1;
+			}
+		}
+	}
+
+	if (row != -1) {
+		makeTheMoveFromComputerSide(marker, row, col);
+		return;
+	} else {
+	// console.log("array" + array);
+
+
+	while(row==-1 || col==-1 || array[row][col] != -1){
+		row=parseInt((Math.random()*1000)%N_SIZE);
+		col=parseInt((Math.random()*1000)%N_SIZE);
+		console.log("inside row = " + row+" col = " + col + "   " + array[row][col] );
+	}
+	console.log("row = " + row+" col = " + col + "   " + array[row][col] );
+	console.log(array);
+
+makeTheMoveFromComputerSide(marker, row, col);
+		return;
+	}
+	
+
+
+}
+
+/**
+
+**/
+
+function makeTheMoveFromComputerSide(marker, row, col) {
+
+	console.log("Make move " + marker + " " + row + " " + col);
+
+var markerValue = {'1':1,'2':2,'3':3};
+array[row][col] = markerValue[marker];
+
+boxes.forEach(function (square){// learn
+
+		var rowS= parseInt(square.classList[1].substring(3,4));
+		var colS= parseInt(square.classList[0].substring(3,4));
+		if(row==rowS && col==colS){
+
+			square.innerHTML=marker;
+			moves+=1;
+		}
+		// square.innerHTML=EMPTY;
+	})
+
+validationAfterEveryMove(marker, row, col);
+
+
+}
+
+
+
+/**
+**/
+function validationAfterEveryMove(marker, row, col){
+	var winner = isThereAWinner(marker, row, col);
+console.log("Winner " + winner);
+if(winner != '-1') {
+	console.log('Player '+ winner + " Win the game");
+	document.getElementById('turn').textContent='Player '+ winner + " win the game";
+	gameEnd=true;
+		// document.getElementById('turn').textContent='Player '+turn+' is the WINNER';
+		boxes.forEach(function (square){// learn
+		square.removeEventListener('click',set);//clicking event is removed
+	})
+} else {
+
+
+// Next turn
+if(marker=='1'){
+		turn='2';
+		if (player2IsSysUser){
+		computerTurn('2');
+				return;}
+	}else if(marker=='2'){
+		turn='3';
+		if (player3IsSysUser){
+		computerTurn('3');
+				return;}
+	} else if(marker=='3'){
+		turn='1';
+	}
+
+	document.getElementById('turn').textContent='Your turn Player '+ turn;
+}
 }
 
 

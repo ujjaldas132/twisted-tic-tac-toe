@@ -11,12 +11,17 @@ var rowMap={};
 var colMap={};
 var player2IsSysUser = true;
 var player3IsSysUser = true;
+var player1IsSysUser = false;
 
 var cellSize=285;
 var winningMoves=N_SIZE;
 
 //setting up the players
 const urlParams = new URLSearchParams(window.location.search);
+const player1 = urlParams.get('player1');
+if(player1=="true") {
+	player1IsSysUser = true;
+}
 const player2 = urlParams.get('player2');
 if(player2=="false") {
 	player2IsSysUser = false;
@@ -72,7 +77,7 @@ function init(){
 			array[i][j]=-1;
 		}
 	}
-	console.log(array);
+	// console.log(array);
 
 	var board=document.createElement('table');//create table 
 	board.id='board';
@@ -263,76 +268,124 @@ return '-1';
 **/
 
 function checkWinner(marker1, marker2, row, col) {
-var count = 0;
-for(var startingPoint =0; startingPoint<2;startingPoint++){
-for (var i = startingPoint;i<5;i++){
-	if(array[i][col] == marker1 || array[i][col]==marker2){
+
+if(!(array[row][col] == marker1 || array[row][col]==marker2)){
+		return false;
+	}
+
+// Along the row
+var count = 1;
+var dCol = col;
+while(dCol>0) {
+	if(array[row][dCol-1] == marker1 || array[row][dCol-1]==marker2){
 		count++;
 	} else {
-		count = 0;
+		break;
 	}
-	if(count == 4){
-		return true;
-	}
+	dCol--;
 }
-}
-var count = 0;
-for(var startingPoint =0; startingPoint<2;startingPoint++){
-for (var i = startingPoint;i<5;i++){
-	if(array[row][i] == marker1 || array[row][i]==marker2){
+var dCol = col;
+while(dCol<4) {
+	if(array[row][dCol+1] == marker1 || array[row][dCol+1]==marker2){
 		count++;
-	}else {
-		count = 0;
+	} else {
+		break;
 	}
-	if(count == 4){
+	dCol++;
+}
+if(count >= 4){
 		return true;
 	}
-}
-}
 
-// Diagonal 1
-var dRow = row - Math.min(row, col);
-var dCol = col - Math.min(row, col);
 
-for(var startingPoint =0; startingPoint<2;startingPoint++){
-	var count = 0;
-for(var i =startingPoint; dRow+i<5 && dCol+i<5;i++){
-	if(array[dRow+i][dCol+i] == marker1 || array[dRow+i][dCol+i]==marker2){
+// Along Column
+var count = 1;
+var dRow = row;
+while(dRow>0) {
+	if(array[dRow-1][col] == marker1 || array[dRow-1][col]==marker2){
 		count++;
-	}else {
-		count = 0;
+	} else {
+		break;
 	}
-	if(count == 4){
-		return true;
-	}
-
+	dRow--;
 }
-}
-
-// Diagonal 2
-var dRow = row - Math.max(row, col)+4;
-var dCol = col + Math.max(row, col)-4;
-if (dRow > 4 || dCol < 0 ){
-	dRow = row;
-	dCol = col;
-}
-// console.log(row + " dRow "+ dRow);
-// console.log(col + " dCol"+ dCol);
-
-for(var startingPoint =0; startingPoint<2;startingPoint++){
-	var count = 0;
-for(var i =startingPoint; dRow-i>=0 && dCol+i<5;i++){
-	if(array[dRow-i][dCol+i] == marker1 || array[dRow-i][dCol+i]==marker2){
+var dRow = row;
+while(dRow<4) {
+	if(array[dRow+1][col] == marker1 || array[dRow+1][col]==marker2){
 		count++;
-	}else {
-		count = 0;
+	} else {
+		break;
 	}
-	if(count == 4){
+	dRow++;
+}
+if(count >= 4){
 		return true;
 	}
 
+
+
+// primary Diagonal 
+var dRow = row;
+var dCol = col;
+var count = 1;
+
+while(dRow<4 && dCol<4) {
+	if(array[dRow+1][dCol+1] == marker1 || array[dRow+1][dCol+1]==marker2){
+		count++;
+	} else {
+		break;
+	}
+	dCol++;
+	dRow++;
 }
+var dRow = row;
+var dCol = col;
+
+while(dRow>0 && dCol>0) {
+	if(array[dRow-1][dCol-1] == marker1 || array[dRow-1][dCol-1]==marker2){
+		count++;
+	} else {
+		break;
+	}
+	dCol--;
+	dRow--;
 }
+if(count >= 4){
+		return true;
+	}
+
+
+
+// Along the Secondary Diagonal 
+var dRow = row;
+var dCol = col;
+var count = 1;
+
+
+while (dRow < 4 && dCol > 0) {
+	if(array[dRow+1][dCol-1] == marker1 || array[dRow+1][dCol-1]==marker2){
+		count++;
+	} else {
+		break;
+	}
+	dCol--;
+	dRow++;
+}
+var dRow = row;
+var dCol = col;
+while(dRow >0 && dCol < 4) {
+	if(array[dRow-1][dCol+1] == marker1 || array[dRow-1][dCol+1]==marker2){
+		count++;
+	} else {
+		break;
+	}
+	dCol++;
+	dRow--;
+}
+
+if(count >= 4){
+		return true;
+	}
 
 
 return false;
@@ -381,10 +434,10 @@ function computerTurn(marker) {
 	while(row==-1 || col==-1 || array[row][col] != -1){
 		row=parseInt((Math.random()*1000)%N_SIZE);
 		col=parseInt((Math.random()*1000)%N_SIZE);
-		console.log("inside row = " + row+" col = " + col + "   " + array[row][col] );
+		// console.log("inside row = " + row+" col = " + col + "   " + array[row][col] );
 	}
-	console.log("row = " + row+" col = " + col + "   " + array[row][col] );
-	console.log(array);
+	// console.log("row = " + row+" col = " + col + "   " + array[row][col] );
+	// console.log(array);
 
 makeTheMoveFromComputerSide(marker, row, col);
 		return;
@@ -453,6 +506,10 @@ if(marker=='1'){
 				return;}
 	} else if(marker=='3'){
 		turn='1';
+		if (player1IsSysUser){
+		computerTurn('1');
+				return;
+			}
 	}
 
 	document.getElementById('turn').textContent='Your turn Player '+ turn;
